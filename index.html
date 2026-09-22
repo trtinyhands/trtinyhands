@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#282420" />
+  <title>trtinyhands · Gelişim Odaklı Oyuncaklar</title>
+  <meta name="description" content="trtinyhands — Gelişim Odaklı Oyuncakla" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css?v=13" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='18' fill='%23fffdf8' stroke='%23e0d5c2' stroke-width='4'/%3E%3Crect x='24' y='24' width='24' height='24' rx='4' fill='%23b47b56'/%3E%3Crect x='52' y='24' width='24' height='24' rx='4' fill='%238e9c78'/%3E%3Crect x='24' y='52' width='24' height='24' rx='4' fill='%23d8a48a'/%3E%3Crect x='52' y='52' width='24' height='24' rx='4' fill='%23e3c27a'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+      <span class="header__left">Oyuncaklar</span>
+      <a href="index.html" class="brand" aria-label="trtinyhands ana sayfa">
+        <svg class="logo" viewBox="0 0 200 60" aria-hidden="true">
+          <rect x="1.5" y="1.5" width="197" height="57" rx="10" fill="none" stroke="#e0d5c2" stroke-width="1.5"/>
+          <text x="100" y="27" text-anchor="middle" textLength="150" lengthAdjust="spacingAndGlyphs"
+                font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="800" fill="#2a2620">TRTINYHANDS</text>
+          <g>
+            <rect x="68"  y="39" width="15" height="12" rx="2.5" fill="#b47b56"/>
+            <rect x="85"  y="39" width="15" height="12" rx="2.5" fill="#8e9c78"/>
+            <rect x="102" y="39" width="15" height="12" rx="2.5" fill="#d8a48a"/>
+            <rect x="119" y="39" width="15" height="12" rx="2.5" fill="#e3c27a"/>
+          </g>
+        </svg>
+      </a>
+      <div class="header__actions">
+        <button class="icon-btn" id="cartBtn" aria-label="Sepeti aç">
+          <img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F6D2.svg" alt="">
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+      <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  </header>
+
+  <main class="shop">
+    <!-- Dalgalı tanıtım bandı -->
+    <section class="intro-band">
+      <div class="band-figures" aria-hidden="true">
+        <span class="bf bf--1"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F995.svg" alt=""></span>
+        <span class="bf bf--2"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F680.svg" alt=""></span>
+        <span class="bf bf--3"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/2B50.svg" alt=""></span>
+        <span class="bf bf--4"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F388.svg" alt=""></span>
+        <span class="bf bf--5"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F9F8.svg" alt=""></span>
+        <span class="bf bf--6"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1FA81.svg" alt=""></span>
+        <span class="bf bf--7"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F6F8.svg" alt=""></span>
+        <span class="bf bf--8"><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/2728.svg" alt=""></span>
+      </div>
+      <div class="container shop-intro">
+        <span class="eyebrow"></span>
+        <h1>Minik eller için tasarlanmış oyuncaklar</h1>
+        <p>Her çocuğun oyun oynarken öğrenme ve gelişme ihtiyacından ilham aldık. Çocuk gelişimini merkeze alan tasarımlarımız, minik ellerin güvenle oynaması için sağlığa zararsız materyallerle özenle hazırlandı.</p>
+        <p class="tagline">“Küçük ellerin, büyük keşifleri”</p>
+      </div>
+    </section>
+
+    <!-- Kayan temasal şerit -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+       <span><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F331.svg" alt="">Doğal Kaynaklı Güvenli Materyal</span><span><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/270F.svg" alt="">Gelişim Odaklı Psikolog Tasarımı</span><span><img class="emo" src="https://emojigraph.org/media/microsoft/delivery-truck_1f69a.png" alt="">1500 TL ve üzeri siparişlerde kargo BEDAVA</span>
+       <span><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/1F331.svg" alt="">Doğal Kaynaklı Güvenli Materyal</span><span><img class="emo" src="https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/270F.svg" alt="">Gelişim Odaklı Psikolog Tasarımı</span><span><img class="emo" src="https://emojigraph.org/media/microsoft/delivery-truck_1f69a.png" alt="">1500 TL ve üzeri siparişlerde kargo BEDAVA</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="filters" id="filters" role="tablist" aria-label="Kategori filtreleri"></div>
+        <input type="search" id="search" class="search" placeholder="Figür ara..." aria-label="Ürün ara" />
+      </div>
+
+      <!-- Product grid -->
+      <div class="product-grid" id="productGrid"></div>
+      <p class="empty" id="emptyState" hidden>Aramanıza uygun ürün bulunamadı.</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a href="https://www.instagram.com/trtinyhands?stkn=eXRpd3liYTJ5bnNt" class="footer__brand">İnstagram<span><img class="emo" src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original"><span></a>
+      <p class="footer__tag">Oyunla büyüyen, güvenle gelişen hayaller.</p>
+      <p>© <span id="year"></span> trtinyhands · Gelişim Odaklı Oyuncakla</p>
+    </div>
+  </footer>
+
+  <!-- Cart drawer -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart" id="cart" aria-label="Sepet" aria-hidden="true">
+    <div class="cart__head">
+      <h3>Sepet</h3>
+      <button class="icon-btn" id="cartClose" aria-label="Sepeti kapat">✕</button>
+    </div>
+    <div class="cart__items" id="cartItems"></div>
+    <div class="cart__foot">
+      <div class="cart__total"><span>Toplam</span><strong id="cartTotal">0₺</strong></div>
+      <button class="btn btn--primary btn--full" id="checkoutBtn">WhatsApp ile Sipariş Ver</button>
+      <p class="cart__note">Siparişiniz WhatsApp üzerinden onaylanır · Kargo ayrıca hesaplanır.</p>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/products.js?v=13"></script>
+  <script src="assets/js/store.js?v=13"></script>
+  <script src="assets/js/main.js?v=13"></script>
+</body>
+</html>

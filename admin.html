@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ürün Yönetimi · trtinyhands</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css?v=13" />
+  <link rel="stylesheet" href="assets/css/admin.css?v=13" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='18' fill='%232a2620'/%3E%3Crect x='24' y='24' width='24' height='24' rx='4' fill='%23b47b56'/%3E%3Crect x='52' y='24' width='24' height='24' rx='4' fill='%238e9c78'/%3E%3Crect x='24' y='52' width='24' height='24' rx='4' fill='%23d8a48a'/%3E%3Crect x='52' y='52' width='24' height='24' rx='4' fill='%23e3c27a'/%3E%3C/svg%3E" />
+</head>
+<body class="admin">
+
+  <header class="ad-head">
+    <div class="ad-head__inner">
+      <div class="ad-head__brand">
+        <span class="ad-head__dot"></span>
+        <div>
+          <strong>Ürün Yönetimi</strong>
+          <small>trtinyhands</small>
+        </div>
+      </div>
+
+      <div class="ad-head__actions">
+        <span class="ad-storage" id="storageMeter" title="Taslak deposu kullanımı"></span>
+        <a class="btn-ghost" href="index.html" target="_blank" rel="noopener">Siteyi aç ↗</a>
+        <button class="btn-ghost" id="importBtn">İçe Aktar</button>
+        <button class="btn-solid" id="exportBtn">products.js İndir</button>
+      </div>
+    </div>
+    <div class="ad-head__bar" id="dirtyBar" hidden>
+      Kaydedilmemiş değişiklikler var — yayına almak için <strong>products.js İndir</strong>'e basıp
+      dosyayı sitenizdeki <code>assets/js/</code> klasörüne yükleyin.
+    </div>
+  </header>
+
+  <main class="ad-main">
+    <!-- Sol: ürün listesi -->
+    <aside class="ad-list">
+      <div class="ad-list__head">
+        <input type="search" id="listSearch" class="ad-input" placeholder="Ürün ara..." aria-label="Ürün ara" />
+        <button class="btn-solid btn-solid--sm" id="newBtn">+ Yeni</button>
+      </div>
+      <div class="ad-list__items" id="listItems"></div>
+      <p class="ad-list__count" id="listCount"></p>
+    </aside>
+
+    <!-- Orta: düzenleme formu -->
+    <section class="ad-editor" id="editor">
+      <div class="ad-empty" id="editorEmpty">
+        <p>Soldan bir ürün seçin veya <strong>+ Yeni</strong> ile ekleyin.</p>
+      </div>
+
+      <form class="ad-form" id="form" hidden autocomplete="off">
+        <div class="ad-form__head">
+          <h2 id="formTitle">Ürünü Düzenle</h2>
+          <button type="button" class="btn-danger" id="deleteBtn">Sil</button>
+        </div>
+
+        <!-- Görsel -->
+        <fieldset class="ad-field">
+          <legend>Ürün Görseli</legend>
+          <p class="ad-hint">
+            Kart oranı 4:5. Görseli sürükleyerek konumlandırın, tekerlek veya kaydırıcıyla yakınlaştırın.
+            Görsel yüklemezseniz aşağıdaki figür kullanılır.
+          </p>
+          <div id="cropper"></div>
+          <div class="ad-imgbar">
+            <label class="btn-ghost">
+              Dosya Seç
+              <input type="file" id="imageInput" accept="image/*" hidden />
+            </label>
+            <button type="button" class="btn-ghost" id="imageClear">Görseli Kaldır</button>
+          </div>
+          <label class="ad-row">
+            <span>Yedek figür (görsel yokken)</span>
+            <input type="text" id="f_emoji" class="ad-input" maxlength="8" placeholder="🐉" />
+          </label>
+        </fieldset>
+
+        <!-- Temel bilgiler -->
+        <fieldset class="ad-field">
+          <legend>Temel Bilgiler</legend>
+          <label class="ad-row">
+            <span>Ürün adı</span>
+            <input type="text" id="f_title" class="ad-input" required />
+          </label>
+          <label class="ad-row">
+            <span>Kategori</span>
+            <input type="text" id="f_category" class="ad-input" list="categoryList" required />
+            <datalist id="categoryList"></datalist>
+          </label>
+          <label class="ad-row">
+            <span>Açıklama</span>
+            <textarea id="f_desc" class="ad-input" rows="4"></textarea>
+          </label>
+        </fieldset>
+
+        <!-- Fiyat -->
+        <fieldset class="ad-field">
+          <legend>Fiyat ve İndirim</legend>
+          <div class="ad-grid2">
+            <label class="ad-row">
+              <span>Satış fiyatı (₺)</span>
+              <input type="number" id="f_price" class="ad-input" min="0" step="1" required />
+            </label>
+            <label class="ad-row">
+              <span>Eski fiyat (₺) — indirim yoksa boş</span>
+              <input type="number" id="f_oldPrice" class="ad-input" min="0" step="1" />
+            </label>
+          </div>
+          <p class="ad-discount" id="discountInfo"></p>
+        </fieldset>
+
+        <!-- Stok -->
+        <fieldset class="ad-field">
+          <legend>Stok</legend>
+          <p class="ad-hint">
+            Ürün sayfasındaki stok rozetini belirler: <strong>0</strong> → “Tükendi”
+            (satın alma kapanır), <strong>1-5</strong> → “Son N adet”,
+            <strong>6+</strong> → “Stokta var”.
+          </p>
+          <label class="ad-row ad-row--narrow">
+            <span>Stok adedi</span>
+            <input type="number" id="f_stock" class="ad-input" min="0" step="1" />
+          </label>
+          <p class="ad-stock-preview" id="stockPreview"></p>
+        </fieldset>
+
+        <!-- Etiketler -->
+        <fieldset class="ad-field">
+          <legend>Etiketler</legend>
+          <p class="ad-hint">
+            Ana sayfadaki kartta ve ürün sayfasında görünür. İndirim etiketi,
+            eski fiyat girildiğinde otomatik eklenir.
+          </p>
+          <div class="ad-badges" id="badgePicker"></div>
+        </fieldset>
+
+        <!-- Teknik özellikler -->
+        <fieldset class="ad-field">
+          <legend>Teknik Özellikler</legend>
+          <p class="ad-hint">Boş bıraktığınız alanlar varsayılan değerle doldurulur.</p>
+          <label class="ad-row">
+            <span>Boyut</span>
+            <input type="text" id="f_size" class="ad-input" />
+          </label>
+          <label class="ad-row">
+            <span>Malzeme</span>
+            <input type="text" id="f_material" class="ad-input" />
+          </label>
+          <label class="ad-row">
+            <span>Baskı kalitesi</span>
+            <input type="text" id="f_layer" class="ad-input" />
+          </label>
+        </fieldset>
+
+        <!-- Değerlendirme -->
+        <fieldset class="ad-field">
+          <legend>Değerlendirme</legend>
+          <div class="ad-grid2">
+            <label class="ad-row">
+              <span>Puan (0-5)</span>
+              <input type="number" id="f_rating" class="ad-input" min="0" max="5" step="0.1" />
+            </label>
+            <label class="ad-row">
+              <span>Yorum sayısı</span>
+              <input type="number" id="f_reviews" class="ad-input" min="0" step="1" />
+            </label>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <!-- Sağ: canlı önizleme -->
+    <aside class="ad-preview" id="preview" hidden>
+      <h3>Önizleme</h3>
+
+      <div class="ad-preview__block">
+        <span class="ad-preview__label">Ana sayfadaki kart</span>
+        <div class="product-grid ad-preview__grid" id="previewCard"></div>
+      </div>
+
+      <div class="ad-preview__block">
+        <span class="ad-preview__label">Ürün sayfası</span>
+        <div class="ad-preview__detail" id="previewDetail"></div>
+      </div>
+    </aside>
+  </main>
+
+  <input type="file" id="importInput" accept=".js,text/javascript,application/javascript" hidden />
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/products.js?v=13"></script>
+  <script src="assets/js/store.js?v=13"></script>
+  <script src="assets/js/cropper.js?v=13"></script>
+  <script src="assets/js/admin.js?v=15"></script>
+</body>
+</html>
