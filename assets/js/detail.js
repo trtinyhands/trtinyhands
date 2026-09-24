@@ -44,7 +44,7 @@
   /* Teknik özellikler ürüne özeldir; boş bırakılanlar varsayılana düşer. */
   const specRows = [
     ["Boyut (yaklaşık)", p.size || DEFAULT_SPECS.size],
-    ["Malzeme", p.material || DEFAULT_SPECS.material],
+    ["Hangi yönden destekler?", p.material || DEFAULT_SPECS.material],
     ["Baskı kalitesi", p.layer || DEFAULT_SPECS.layer],
   ]
     .filter(([, v]) => v)
