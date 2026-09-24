@@ -247,7 +247,7 @@
     const rows = [
       ["Boyut (yaklaşık)", p.size || DEFAULT_SPECS.size],
       ["Hangi yönden destekler?", p.material || DEFAULT_SPECS.material],
-      ["Baskı kalitesi", p.layer || DEFAULT_SPECS.layer],
+      ["Çocuk sağlığına uygun ve güvenli.", p.layer || DEFAULT_SPECS.layer],
     ]
       .filter(([, v]) => v)
       .map(([k, v]) => `<div class="specs__row"><dt>${k}</dt><dd>${esc(v)}</dd></div>`)
