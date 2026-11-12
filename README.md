@@ -6,9 +6,9 @@ Kurulum gerektirmez — `index.html` dosyasını bir tarayıcıda açmanız yete
 > **Not:** Yerel bir sunucuyla çalıştırmak isterseniz `python -m http.server 8123`
 > yeterli.
 >
-> **Önbellek:** CSS/JS bağlantıları `?v=13` sürüm etiketi taşır. Bir dosyayı
+> **Önbellek:** CSS/JS bağlantıları `?v=20` sürüm etiketi taşır. Bir dosyayı
 > değiştirdikten sonra tarayıcının eskisini göstermemesi için üç HTML dosyasındaki
-> bu numarayı artırın (`?v=14` …). Yine de görmüyorsanız **Ctrl+Shift+R** ile
+> bu numarayı artırın (`?v=21` …). Yine de görmüyorsanız **Ctrl+Shift+R** ile
 > sert yenileme yapın.
 
 ## Dosya Yapısı
@@ -45,7 +45,11 @@ Her sayfa `products.js` → `store.js` → (sayfaya özel script) sırasıyla y�
   sıralama, görsel yükleme + kırpma, etiket ve indirim yönetimi, canlı önizleme.
 - **Dinamik ürün listesi** — Ürünler `products.js` içindeki `PRODUCTS` dizisinden otomatik oluşur.
 - **Kategori filtresi + arama** — Anlık filtreleme.
-- **Ürün detay sayfası** — Görsel, etiketler, adet seçici, teknik özellikler, ilgili ürünler.
+- **Çoklu görsel + video** — Her ürün bir medya listesi tutar. Ana sayfadaki
+  kartta oklar ve noktalarla görseller arasında gezilir; ürün sayfasında
+  büyük galeri, küçük görseller, ok tuşlarıyla gezinme ve yerinde video
+  oynatma vardır. Ana sayfadaki kartta yalnızca fotoğraflar döner.
+- **Ürün detay sayfası** — Galeri, etiketler, adet seçici, teknik özellikler, ilgili ürünler.
 - **Sepet** — Ekle/çıkar, adet, toplam; `localStorage`'da saklanır (sayfa
   yenilense de kaybolmaz). Sepet her yüklenişte ayıklanır: katalogdan silinmiş
   ürünler, bozuk adetler ve tükenmiş/stok üstü miktarlar temizlenir.
@@ -89,15 +93,47 @@ başka bir bilgisayardan devam ederken bunu kullanın.
 > `index.html`, `detail.html` ve `legal.html` içindeki `?v=` numarasını da
 > artırın.
 
-### Görsel yükleme
+### Görseller ve videolar
 
-Kart oranı **4:5**. Dosya seçtiğinizde ya da sürükleyip bıraktığınızda kırpma
-aracı açılır: görseli sürükleyerek konumlandırın, fare tekerleği veya
-kaydırıcıyla yakınlaştırın. Çıktı 800×1000 WebP olarak sıkıştırılır ve
-`products.js` içine gömülür — ayrıca görsel barındırmanız gerekmez.
+Her ürünün bir **medya listesi** vardır; sıralama önemlidir:
 
-Görsel yüklemezseniz ürün, **yedek figür** alanındaki emojinin OpenMoji
-karşılığıyla gösterilir.
+- **İlk sıradaki** medya ana sayfadaki kartta, sepette ve arama sonuçlarında
+  görünür (listede "Kapak" etiketiyle işaretlidir).
+- Birden çok medya varsa kartta oklar ve noktalar, ürün sayfasında büyük
+  galeri + küçük görseller çıkar.
+- Hiç medya eklemezseniz ürün, **yedek figür** alanındaki emojinin OpenMoji
+  karşılığıyla gösterilir.
+
+**Görsel ekleme.** `+ Görsel Ekle` ile bir ya da birden çok dosya seçin
+(ya da listenin veya kırpma aracının üstüne sürükleyip bırakın). Kart oranı
+**4:5**. Listeden bir görseli seçtiğinizde kırpma aracında açılır: sürükleyerek
+konumlandırın, fare tekerleği veya kaydırıcıyla yakınlaştırın. Çıktı 800×1000
+WebP olarak sıkıştırılır ve `products.js` içine gömülür — ayrıca görsel
+barındırmanız gerekmez.
+
+**Video ekleme.** Videolar siteye kendiniz yüklediğiniz dosyalardır;
+gömülü oynatıcı (YouTube/Vimeo) desteklenmez.
+
+1. mp4 dosyasını sitenizde `assets/video/` klasörüne yükleyin
+2. Panelde `+ Video Ekle` deyip dosya yolunu yazın: `assets/video/tanitim.mp4`
+
+> Videolar `products.js` içine **gömülmez**, yalnızca dosya yolu saklanır —
+> bu yüzden dosyayı siteye ayrıca yüklemeniz gerekir.
+
+> **Videolar ana sayfadaki kartta görünmez.** Kartta ve sepette yalnızca
+> fotoğraflar döner; video yalnızca ürün sayfasındaki galeride, üstüne
+> tıklayınca oynar.
+
+Listeden bir videoyu seçtiğinizde kırpma aracı o videonun **kapak görselini**
+düzenler — kartlarda ve küçük görsellerde bu görünür.
+
+**Sıralama ve silme.** Seçili medyayı `← Öne al` / `Geri al →` ile taşıyın,
+`Bu medyayı sil` ile kaldırın. Ana sayfadaki kartı değiştirmek için istediğiniz
+medyayı ilk sıraya taşımanız yeterlidir.
+
+> Ana sayfadaki ızgarada videolar oynatılmaz: kapak görseli ve bir oynat
+> işareti gösterilir, tıklayınca ürün sayfasına gidilir. Video yalnızca ürün
+> sayfasında, üstüne tıklayınca oynar.
 
 > Görseller dosyaya gömüldüğü için katalog büyüdükçe `products.js` de büyür.
 > Üstteki **Taslak: x.xx MB** göstergesi tarayıcı deposundaki yeri izler
@@ -132,9 +168,14 @@ sıfır değilse adet seçici stok adediyle sınırlanır.
 
 ### Teknik özellikler
 
-Ürün sayfasında yalnızca **Boyut**, **Malzeme** ve **Baskı kalitesi** gösterilir.
-Üçü de ürüne özeldir; boş bıraktığınız alan `DEFAULT_SPECS` değerine düşer.
-Yeni ürün eklediğinizde bu üç alan varsayılanlarla dolu gelir.
+Ürün sayfasında yalnızca **Boyut**, **Hangi yönden destekler?** ve
+**Yaş aralığı** gösterilir. Üçü de ürüne özeldir; boş bıraktığınız alan
+`DEFAULT_SPECS` değerine düşer. Yeni ürün eklediğinizde bu üç alan
+varsayılanlarla dolu gelir.
+
+> Alanların iç adı veride hâlâ `size` / `material` / `layer`'dır (sitenin ilk
+> hâlinden kalma). Görünen başlıkları değiştirmek için `detail.js`, `admin.js`
+> ve `admin.html` içindeki üç etikete dokunmak yeterli.
 
 ## Ayarlar
 
@@ -149,6 +190,7 @@ Yeni ürün eklediğinizde bu üç alan varsayılanlarla dolu gelir.
 | Varsayılan teknik özellikler | `assets/js/products.js` → `DEFAULT_SPECS` |
 | Az stok eşiği | `assets/js/products.js` → `STOCK_LOW_THRESHOLD` |
 | Görsel boyutu / kalitesi | `assets/js/cropper.js` → `MAX_EDGE`, `QUALITY` |
+| Galeri / karusel davranışı | `assets/js/store.js` → `mediaList`, `galleryHTML`, `wireSlides` |
 | Varlık sürümü (önbellek) | `index/detail/legal.html` → `?v=` |
 
 ## Yayına Almadan Önce

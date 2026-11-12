@@ -213,15 +213,58 @@ window.YF = (function () {
     if (btn) btn.disabled = false;
   }
 
-  /* ---------------- Ürün görseli & etiketleri ---------------- */
+  /* ---------------- Ürün medyası & etiketleri ---------------- */
 
-  /* Yüklenmiş görsel varsa onu, yoksa OpenMoji figürünü döner.
-     Dönen öğe kabın DOĞRUDAN çocuğu olmalıdır: fotoğraf `inset: 0` ile
+  const esc = (s) =>
+    String(s == null ? "" : s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+    );
+
+  /* Ürünün medya listesi: [{ type, src, poster }].
+     Eski kayıtlarda tek bir `image` alanı vardı; onu da tek öğelik listeye
+     çevirir, böylece sitenin tamamı tek biçimle çalışır. */
+  function mediaList(p) {
+    const raw = Array.isArray(p.media)
+      ? p.media
+      : p.image
+      ? [{ type: "image", src: p.image }]
+      : [];
+    return raw
+      .filter((m) => m && m.src)
+      .map((m) => ({
+        type: m.type === "video" ? "video" : "image",
+        src: String(m.src),
+        poster: m.poster || null,
+      }));
+  }
+
+  /* Yalnızca fotoğraflar. Kartlar, sepet ve küçük önizlemeler bunu
+     kullanır — videolar yalnızca ürün sayfasındaki galeride görünür. */
+  const imageList = (p) => mediaList(p).filter((m) => m.type === "image");
+
+  /* Tek bir medyanın durağan görüntüsü (ızgara, sepet, küçük görsel).
+     Videolar burada oynatılmaz: kapak görseli + oynat işareti gösterilir.
+     Dönen <img>/<video> kabın DOĞRUDAN çocuğu olmalıdır: `inset: 0` ile
      kabı doldurur, araya sarmalayıcı girerse boyut çöker. */
-  function productMedia(p) {
-    if (p.image) {
-      return `<img class="figure" src="${p.image}" alt="${p.title}" loading="lazy">`;
+  function mediaThumb(m, alt = "") {
+    if (!m || !m.src) return "";
+    if (m.type !== "video") {
+      return `<img class="figure" src="${esc(m.src)}" alt="${esc(alt)}" loading="lazy">`;
     }
+    const inner = m.poster
+      ? `<img class="figure" src="${esc(m.poster)}" alt="${esc(alt)}" loading="lazy">`
+      : // Kapak yoksa tarayıcı ilk kareyi gösterir; yalnızca üstbilgi inilir.
+        `<video class="figure" src="${esc(m.src)}" preload="metadata" muted playsinline></video>`;
+    return `${inner}<span class="media-play" aria-hidden="true"></span>`;
+  }
+
+  /* Ürünün ilk FOTOĞRAFI, yoksa OpenMoji figürü. Sepet satırı, admin
+     listesi ve sepete uçan kopya bunu kullanır. */
+  function productMedia(p) {
+    const first = imageList(p)[0];
+    if (first) return mediaThumb(first, p.title);
     return `<span class="card__emoji">${emo(p.emoji, "", p.title)}</span>`;
   }
 
@@ -258,7 +301,105 @@ window.YF = (function () {
       .join("");
   }
 
-  /* ---------------- Product card (paylaşılan) ---------------- */
+  /* ---------------- Medya karuseli (paylaşılan) ----------------
+     Hem karttaki küçük galeri hem ürün sayfasındaki büyük galeri aynı
+     sözleşmeyi kullanır, böylece tek bir tıklama yöneticisi ikisini de
+     sürer:
+       [data-gallery]   kap, açık olan medyayı data-index'te tutar
+       [data-slide-i]   sıradaki medya (yalnızca biri .is-active)
+       [data-slide]     bir önceki / bir sonraki düğmesi (-1 / 1)
+       [data-goto]      noktalar ve küçük görseller (hedef sıra) */
+
+  function slideItems(frame) {
+    return $$("[data-slide-i]", frame);
+  }
+
+  /* Oynatılan videoyu durağan kapağına geri döndürür. */
+  function resetSlide(s) {
+    if (!s.classList.contains("is-playing")) return;
+    s.classList.remove("is-playing");
+    s.innerHTML = mediaThumb(
+      { type: s.dataset.type, src: s.dataset.src, poster: s.dataset.poster || null },
+      s.dataset.alt || ""
+    );
+  }
+
+  function setSlide(frame, idx) {
+    const slides = slideItems(frame);
+    const n = slides.length;
+    if (n < 2) return;
+    const i = ((idx % n) + n) % n;
+    frame.dataset.index = String(i);
+    slides.forEach((s, j) => {
+      // Başka bir medyaya geçerken video sussun
+      if (j !== i) resetSlide(s);
+      s.classList.toggle("is-active", j === i);
+    });
+    $$("[data-goto]", frame).forEach((d, j) =>
+      d.classList.toggle("is-active", j === i)
+    );
+    const counter = $(".gallery__counter b", frame);
+    if (counter) counter.textContent = String(i + 1);
+  }
+
+  /* Videoyu yerinde oynatır (yalnızca büyük galeride).
+     Videolar siteye yüklenen kendi dosyalarımızdır (ör.
+     assets/video/tanitim.mp4), gömülü oynatıcı yoktur. */
+  function playSlide(s) {
+    const src = s.dataset.src;
+    if (!src) return;
+    s.classList.add("is-playing");
+    s.innerHTML = `<video class="figure" src="${esc(src)}" controls autoplay playsinline></video>`;
+  }
+
+  /* Karusel tıklamalarını yönetir. Olaylar kaba bağlanır, böylece içerik
+     yeniden basıldığında (admin önizlemesi) yeniden bağlamak gerekmez. */
+  function wireSlides(container) {
+    if (!container || container.dataset.slidesWired) return;
+    container.dataset.slidesWired = "1";
+    container.addEventListener("click", (e) => {
+      const frame = e.target.closest("[data-gallery]");
+      if (!frame) return;
+
+      const step = e.target.closest("[data-slide]");
+      if (step) {
+        e.preventDefault();
+        setSlide(frame, Number(frame.dataset.index || 0) + Number(step.dataset.slide));
+        return;
+      }
+
+      const goto = e.target.closest("[data-goto]");
+      if (goto) {
+        e.preventDefault();
+        setSlide(frame, Number(goto.dataset.goto));
+        return;
+      }
+
+      // Büyük galeride videonun üstüne tıklamak oynatır.
+      const slide = e.target.closest(".gallery__slide");
+      if (slide && slide.dataset.type === "video" && !slide.classList.contains("is-playing")) {
+        e.preventDefault();
+        playSlide(slide);
+      }
+    });
+  }
+
+  /* ---------------- Product card (paylaşılan) ----------------
+     Kartta yalnızca fotoğraflar döner; videolar ürün sayfasındadır. */
+  function cardMedia(p) {
+    const list = imageList(p);
+    if (!list.length) {
+      return `<span class="card__emoji">${emo(p.emoji, "", p.title)}</span>`;
+    }
+    return `<div class="card__slides">${list
+      .map(
+        (m, i) => `<div class="card__slide${
+          i === 0 ? " is-active" : ""
+        }" data-slide-i="${i}">${mediaThumb(m, p.title)}</div>`
+      )
+      .join("")}</div>`;
+  }
+
   function productCard(p, i = 0) {
     const price = p.oldPrice
       ? `<span class="was">${fmt(p.oldPrice)}</span>${fmt(p.price)}`
@@ -267,13 +408,38 @@ window.YF = (function () {
     const badges = badgesHTML(p);
     const st = stockInfo(p);
     const sold = st.level === "out";
+    const list = imageList(p);
+
+    /* Oklar ve noktalar, kırpılan blob şeklinin DIŞINDAKİ çerçevede durur;
+       `overflow: hidden` olan .card__media içinde kenarlardan kesilirlerdi. */
+    const nav =
+      list.length > 1
+        ? `<button class="card__nav card__nav--prev" type="button" data-slide="-1"
+             aria-label="Önceki görsel">‹</button>
+           <button class="card__nav card__nav--next" type="button" data-slide="1"
+             aria-label="Sonraki görsel">›</button>
+           <div class="card__dots">${list
+             .map(
+               (m, j) =>
+                 `<button class="card__dot${j === 0 ? " is-active" : ""}" type="button"
+                    data-goto="${j}" aria-label="${j + 1}. görsel"></button>`
+             )
+             .join("")}</div>`
+        : "";
+
     return `
       <article class="card reveal${sold ? " card--out" : ""}" data-id="${
       p.id
     }" style="--d:${delay}ms">
-        <a class="card__media" href="detail.html?id=${p.id}" aria-label="${p.title} detayları">
-          ${productMedia(p)}
-        </a>
+        <div class="card__frame" data-gallery data-index="0">
+          <div class="card__media">
+            ${cardMedia(p)}
+            <a class="card__link" href="detail.html?id=${p.id}" aria-label="${esc(
+      p.title
+    )} detayları"></a>
+          </div>
+          ${nav}
+        </div>
         <div class="card__info">
           <div class="card__badges">${
             badges ||
@@ -289,16 +455,77 @@ window.YF = (function () {
       </article>`;
   }
 
-  /* Ürün ızgarasındaki "sepete ekle" tıklamalarını yönetir. */
+  /* ---------------- Ürün sayfası galerisi (paylaşılan) ----------------
+     Admin önizlemesi de bunu kullanır: iki yerde ayrı galeri kodu tutulmaz. */
+  function galleryHTML(p, badges = "") {
+    const list = mediaList(p);
+    const badgeBar = badges ? `<div class="gallery__badges">${badges}</div>` : "";
+
+    if (!list.length) {
+      return `
+        <div class="gallery">
+          <div class="gallery__main">
+            ${badgeBar}
+            <span class="card__emoji">${emo(p.emoji, "", p.title)}</span>
+          </div>
+        </div>`;
+    }
+
+    const slides = list
+      .map(
+        (m, i) => `
+        <div class="gallery__slide${i === 0 ? " is-active" : ""}" data-slide-i="${i}"
+          data-type="${m.type}" data-src="${esc(m.src)}"
+          data-poster="${esc(m.poster || "")}" data-alt="${esc(p.title)}">
+          ${mediaThumb(m, p.title)}
+        </div>`
+      )
+      .join("");
+
+    const multi = list.length > 1;
+    const nav = multi
+      ? `<button class="gallery__nav gallery__nav--prev" type="button" data-slide="-1"
+           aria-label="Önceki görsel">‹</button>
+         <button class="gallery__nav gallery__nav--next" type="button" data-slide="1"
+           aria-label="Sonraki görsel">›</button>
+         <span class="gallery__counter"><b>1</b>/${list.length}</span>`
+      : "";
+
+    const thumbs = multi
+      ? `<div class="gallery__thumbs">${list
+          .map(
+            (m, i) => `
+          <button class="gallery__thumb${i === 0 ? " is-active" : ""}" type="button"
+            data-goto="${i}" aria-label="${i + 1}. görsel">
+            ${mediaThumb(m, p.title)}
+          </button>`
+          )
+          .join("")}</div>`
+      : "";
+
+    return `
+      <div class="gallery" data-gallery data-index="0">
+        <div class="gallery__main">
+          ${badgeBar}
+          ${slides}
+          ${nav}
+        </div>
+        ${thumbs}
+      </div>`;
+  }
+
+  /* Ürün ızgarasındaki "sepete ekle" ve karusel tıklamalarını yönetir. */
   function wireProductGrid(container) {
     if (!container) return;
+    wireSlides(container);
     container.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add]");
       if (addBtn) {
         e.preventDefault();
+        // Uçan kopya o an açık olan görselden alınır
         const media = addBtn
           .closest(".card")
-          ?.querySelector(".card__emoji, .figure");
+          ?.querySelector(".card__slide.is-active .figure, .card__emoji, .figure");
         flyToCart(media);
         add(addBtn.dataset.add);
       }
@@ -420,13 +647,25 @@ window.YF = (function () {
 
   /* ---------------- Header + mobile menu ---------------- */
   function initHeader() {
+    /* Başlığın "kaydırıldı" görünümü. Histerezis var: açılma ve kapanma
+       eşikleri farklı, böylece sınırın tam üstünde ufak hareketlerde
+       zemin/gölge gidip gelmez. */
     const header = $("#header");
-    if (header)
-      window.addEventListener(
-        "scroll",
-        () => header.classList.toggle("scrolled", window.scrollY > 8),
-        { passive: true }
-      );
+    if (header) {
+      let on = false;
+      const syncHeader = () => {
+        const y = window.scrollY;
+        if (!on && y > 40) {
+          on = true;
+          header.classList.add("scrolled");
+        } else if (on && y < 16) {
+          on = false;
+          header.classList.remove("scrolled");
+        }
+      };
+      window.addEventListener("scroll", syncHeader, { passive: true });
+      syncHeader();
+    }
 
     const nav = $("#nav");
     const ham = $("#hamburger");
@@ -592,7 +831,14 @@ window.YF = (function () {
     $$,
     fmt,
     emo,
+    esc,
     productMedia,
+    mediaList,
+    imageList,
+    mediaThumb,
+    galleryHTML,
+    wireSlides,
+    setSlide,
     badgesHTML,
     badgeList,
     discountPct,
