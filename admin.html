@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css?v=13" />
-  <link rel="stylesheet" href="assets/css/admin.css?v=13" />
+  <link rel="stylesheet" href="assets/css/style.css?v=31" />
+  <link rel="stylesheet" href="assets/css/admin.css?v=31" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='18' fill='%232a2620'/%3E%3Crect x='24' y='24' width='24' height='24' rx='4' fill='%23b47b56'/%3E%3Crect x='52' y='24' width='24' height='24' rx='4' fill='%238e9c78'/%3E%3Crect x='24' y='52' width='24' height='24' rx='4' fill='%23d8a48a'/%3E%3Crect x='52' y='52' width='24' height='24' rx='4' fill='%23e3c27a'/%3E%3C/svg%3E" />
 </head>
 <body class="admin">
@@ -61,23 +61,48 @@
           <button type="button" class="btn-danger" id="deleteBtn">Sil</button>
         </div>
 
-        <!-- Görsel -->
+        <!-- Görseller ve videolar -->
         <fieldset class="ad-field">
-          <legend>Ürün Görseli</legend>
+          <legend>Görseller ve Videolar</legend>
           <p class="ad-hint">
-            Kart oranı 4:5. Görseli sürükleyerek konumlandırın, tekerlek veya kaydırıcıyla yakınlaştırın.
-            Görsel yüklemezseniz aşağıdaki figür kullanılır.
+            Ürün sayfasında ok tuşlarıyla gezilen bir galeri olur.
+            Ana sayfadaki kartta ve sepette <strong>yalnızca fotoğraflar</strong> görünür
+            — kart <strong>ilk fotoğrafla</strong> açılır, oklarla diğerlerine geçilir.
+            Videolar yalnızca ürün sayfasında oynar. Hiç fotoğraf eklemezseniz
+            aşağıdaki figür kullanılır.
           </p>
-          <div id="cropper"></div>
+
+          <div class="ad-media" id="mediaStrip"></div>
+
           <div class="ad-imgbar">
             <label class="btn-ghost">
-              Dosya Seç
-              <input type="file" id="imageInput" accept="image/*" hidden />
+              + Görsel Ekle
+              <input type="file" id="imageInput" accept="image/*" multiple hidden />
             </label>
-            <button type="button" class="btn-ghost" id="imageClear">Görseli Kaldır</button>
+            <button type="button" class="btn-ghost" id="videoAdd">+ Video Ekle</button>
           </div>
+
+          <div class="ad-media-edit" id="mediaEdit" hidden>
+            <p class="ad-hint" id="mediaEditHint"></p>
+
+            <label class="ad-row" id="videoUrlRow" hidden>
+              <span>Video dosyası</span>
+              <input type="text" id="f_videoUrl" class="ad-input"
+                     placeholder="assets/video/tanitim.mp4" />
+              <p class="ad-video-check" id="videoCheck"></p>
+            </label>
+
+            <div id="cropper"></div>
+
+            <div class="ad-imgbar">
+              <button type="button" class="btn-ghost" id="mediaUp">← Öne al</button>
+              <button type="button" class="btn-ghost" id="mediaDown">Geri al →</button>
+              <button type="button" class="btn-danger" id="mediaDelete">Bu medyayı sil</button>
+            </div>
+          </div>
+
           <label class="ad-row">
-            <span>Yedek figür (görsel yokken)</span>
+            <span>Yedek figür (medya yokken)</span>
             <input type="text" id="f_emoji" class="ad-input" maxlength="8" placeholder="🐉" />
           </label>
         </fieldset>
@@ -150,11 +175,11 @@
             <input type="text" id="f_size" class="ad-input" />
           </label>
           <label class="ad-row">
-            <span>Malzeme</span>
+            <span>Hangi yönden destekler?</span>
             <input type="text" id="f_material" class="ad-input" />
           </label>
           <label class="ad-row">
-            <span>Baskı kalitesi</span>
+            <span>Yaş aralığı</span>
             <input type="text" id="f_layer" class="ad-input" />
           </label>
         </fieldset>
@@ -195,9 +220,9 @@
   <input type="file" id="importInput" accept=".js,text/javascript,application/javascript" hidden />
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/js/products.js?v=13"></script>
-  <script src="assets/js/store.js?v=13"></script>
-  <script src="assets/js/cropper.js?v=13"></script>
-  <script src="assets/js/admin.js?v=15"></script>
+  <script src="assets/js/products.js?v=31"></script>
+  <script src="assets/js/store.js?v=31"></script>
+  <script src="assets/js/cropper.js?v=31"></script>
+  <script src="assets/js/admin.js?v=31"></script>
 </body>
 </html>
