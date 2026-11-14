@@ -4,8 +4,8 @@
    ============================================================ */
 (function () {
   "use strict";
-  const { $, $$, fmt, emo, add, galleryHTML, wireSlides, setSlide, badgesHTML,
-          discountPct, stockInfo, productCard, wireProductGrid, observeReveals } = YF;
+  const { $, $$, fmt, emo, add, productMedia, badgesHTML, discountPct, stockInfo,
+          productCard, wireProductGrid, observeReveals } = YF;
 
   const root = $("#detailRoot");
   const params = new URLSearchParams(location.search);
@@ -44,8 +44,8 @@
   /* Teknik özellikler ürüne özeldir; boş bırakılanlar varsayılana düşer. */
   const specRows = [
     ["Boyut (yaklaşık)", p.size || DEFAULT_SPECS.size],
-    ["Hangi yönden destekler?", p.material || DEFAULT_SPECS.material],
-    ["Yaş aralığı", p.layer || DEFAULT_SPECS.layer],
+    ["Malzeme", p.material || DEFAULT_SPECS.material],
+    ["Baskı kalitesi", p.layer || DEFAULT_SPECS.layer],
   ]
     .filter(([, v]) => v)
     .map(([k, v]) => `<div class="specs__row"><dt>${k}</dt><dd>${v}</dd></div>`)
@@ -61,7 +61,12 @@
 
     <section class="detail">
       <div class="detail__grid">
-        <div class="reveal">${galleryHTML(p, badges)}</div>
+        <div class="gallery reveal">
+          <div class="gallery__main">
+            ${badges ? `<div class="gallery__badges">${badges}</div>` : ""}
+            ${productMedia(p)}
+          </div>
+        </div>
 
         <div class="detail__info reveal">
           <span class="detail__cat">${p.category}</span>
@@ -111,28 +116,12 @@
       clampQty();
     }
     if (addBtn) {
-      YF.flyToCart(
-        $(".gallery__slide.is-active .figure, .gallery__main .card__emoji")
-      );
+      YF.flyToCart($(".gallery__main .card__emoji, .gallery__main .figure"));
       add(p.id, clampQty());
     }
   });
 
   qtyInput.addEventListener("change", clampQty);
-
-  /* ---- Galeri ---- */
-  wireSlides(root);
-
-  /* Ok tuşlarıyla gezinme. Adet kutusuna yazarken devreye girmez. */
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    // target her zaman bir öğe olmayabilir (ör. document'e gelen olay)
-    const t = e.target;
-    if (t && t.closest && t.closest("input, textarea, [contenteditable]")) return;
-    const frame = $(".gallery[data-gallery]");
-    if (!frame) return;
-    setSlide(frame, Number(frame.dataset.index || 0) + (e.key === "ArrowRight" ? 1 : -1));
-  });
 
   /* ---- İlgili ürünler ---- */
   let related = PRODUCTS.filter(

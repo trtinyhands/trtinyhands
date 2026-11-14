@@ -49,11 +49,6 @@ window.Cropper = (function () {
     let zoom = 1;
     let offset = { x: 0, y: 0 }; // görselin merkezden kayması (ekran pikseli)
     let drag = null;
-    /* Değişiklik bildirimi yalnızca KULLANICI kırpmayı oynattığında gider.
-       Program eliyle görsel yüklemek (ya da kabın yeniden boyutlanması)
-       da çizim tetikler; bunlar bildirilseydi panel, açtığı görseli
-       dokunulmamışken yeniden kodlayıp "değişti" sayardı. */
-    let userTouched = false;
     let view = { w: 300, h: 300 / aspect }; // son çizilen sahne boyutu
     const listeners = [];
 
@@ -110,7 +105,6 @@ window.Cropper = (function () {
     }
     function onPointerMove(e) {
       if (!drag) return;
-      userTouched = true;
       offset.x = drag.ox + (e.clientX - drag.x);
       offset.y = drag.oy + (e.clientY - drag.y);
       draw();
@@ -139,17 +133,12 @@ window.Cropper = (function () {
     );
 
     zoomInput.addEventListener("input", () => setZoom(parseFloat(zoomInput.value)));
-    container.querySelector("[data-reset]").addEventListener("click", () => {
-      userTouched = true;
-      reset();
-    });
+    container.querySelector("[data-reset]").addEventListener("click", reset);
 
     const ro = new ResizeObserver(() => draw());
     ro.observe(stage);
 
-    // Yalnızca tekerlek ve kaydırıcıdan çağrılır — ikisi de kullanıcı işi
     function setZoom(z) {
-      userTouched = true;
       zoom = Math.min(4, Math.max(1, z));
       zoomInput.value = String(zoom);
       draw();
@@ -164,7 +153,7 @@ window.Cropper = (function () {
     /* ---- Değişiklik bildirimi (canlı önizleme için) ---- */
     let emitTimer = null;
     function emit() {
-      if (!userTouched || listeners.length === 0) return;
+      if (listeners.length === 0) return;
       clearTimeout(emitTimer);
       emitTimer = setTimeout(async () => {
         const url = await toDataURL();
@@ -198,7 +187,6 @@ window.Cropper = (function () {
       });
       empty.hidden = true;
       controls.hidden = false;
-      userTouched = false; // yeni görsel: henüz dokunulmadı
       reset();
     }
 
@@ -206,8 +194,8 @@ window.Cropper = (function () {
       img = null;
       empty.hidden = false;
       controls.hidden = true;
-      userTouched = false;
       reset();
+      listeners.forEach((fn) => fn(null));
     }
 
     /* ---- Dışa aktarma ---- */

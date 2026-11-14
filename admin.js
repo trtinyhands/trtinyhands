@@ -21,17 +21,12 @@
   let currentId = null;
   let dirty = false;
   let cropper = null;
-  let mediaIndex = -1; // seçili medyanın sırası (düzenlenen)
-  /* Kırpıcıya program eliyle görsel yüklerken onChange tetiklenir; bu
-     bayrak o sırada gelen bildirimleri yok sayar, yoksa yeni seçilen
-     medya kendi kendini ezerdi. */
-  let suppressCrop = false;
+  let pendingImage = null; // kırpıcıdan gelen son data URL
 
   /* ---------------- Yardımcılar ----------------
-     Kart/etiket/stok/medya mantığı store.js'ten (YF) gelir: mağaza ile
+     Kart/etiket/stok mantığı store.js'ten (YF) gelir: mağaza ile
      önizlemenin birbirinden uzaklaşmaması için tek kaynak. */
-  const { fmt, productMedia, mediaList, mediaThumb, galleryHTML, wireSlides,
-          badgesHTML, discountPct, stockInfo, productCard } = YF;
+  const { fmt, productMedia, badgesHTML, discountPct, stockInfo, productCard } = YF;
 
   function slugify(str) {
     const map = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u", İ: "i" };
@@ -165,193 +160,6 @@
       .join("");
   }
 
-  /* ---------------- Medya (görsel + video) ----------------
-     Her ürün bir medya listesi tutar. Listeden bir öğe seçilir ve
-     kırpıcı o öğeyi düzenler: görselde görselin kendisini, videoda
-     kapak görselini. */
-  const cur = () => products.find((x) => x.id === currentId) || null;
-  const curMedia = () => {
-    const p = cur();
-    return p ? p.media[mediaIndex] || null : null;
-  };
-
-  function renderMediaStrip() {
-    const p = cur();
-    const strip = $("#mediaStrip");
-    if (!p) {
-      strip.innerHTML = "";
-      return;
-    }
-    if (!p.media.length) {
-      strip.innerHTML = `<p class="ad-media__empty">Henüz medya yok — aşağıdan görsel veya video ekleyin.</p>`;
-      return;
-    }
-    /* "Kapak" rozeti ilk FOTOĞRAFA takılır, ilk sıradakine değil:
-       videolar ana sayfadaki kartta görünmediği için kartı temsil eden
-       her zaman ilk fotoğraftır. */
-    const coverIdx = p.media.findIndex((m) => m.type === "image");
-    strip.innerHTML = p.media
-      .map((m, i) => {
-        const tag = i === coverIdx ? "Kapak" : m.type === "video" ? "Video" : i + 1;
-        const title =
-          i === coverIdx
-            ? "Kapak fotoğrafı — ana sayfadaki kartta bu görünür"
-            : m.type === "video"
-            ? "Video — yalnızca ürün sayfasında görünür"
-            : `${i + 1}. sıra`;
-        return `
-        <button type="button" class="ad-media__item${
-          i === mediaIndex ? " is-active" : ""
-        }${m.type === "video" ? " ad-media__item--video" : ""}" data-media="${i}" title="${title}">
-          <span class="ad-media__thumb">${mediaThumb(m, p.title)}</span>
-          <span class="ad-media__tag">${tag}</span>
-        </button>`;
-      })
-      .join("");
-  }
-
-  function renderMediaEdit() {
-    const m = curMedia();
-    const box = $("#mediaEdit");
-    if (!m) {
-      box.hidden = true;
-      return;
-    }
-    box.hidden = false;
-
-    const isVideo = m.type === "video";
-    $("#videoUrlRow").hidden = !isVideo;
-    $("#mediaEditHint").textContent = isVideo
-      ? "Videonun kapak görseli — ürün sayfasındaki küçük görselde bu görünür. Boş bırakırsanız videonun ilk karesi kullanılır. Videolar ana sayfadaki kartta görünmez."
-      : "Kart oranı 4:5. Görseli sürükleyerek konumlandırın, tekerlek veya kaydırıcıyla yakınlaştırın.";
-    if (isVideo) {
-      $("#f_videoUrl").value = m.src;
-      checkVideo(m.src);
-    } else {
-      checkVideo(null);
-    }
-
-    // Yükleme sürerken seçim değişirse bildirim yanlış medyaya yazılmasın
-    suppressCrop = true;
-    const release = () => (suppressCrop = false);
-    const src = isVideo ? m.poster : m.src;
-    if (src) {
-      cropper.load(src).then(release, () => {
-        cropper.clear();
-        release();
-      });
-    } else {
-      cropper.clear();
-      release();
-    }
-  }
-
-  /* Video dosyası gerçekten yerinde mi? Yol elle yazıldığı için harf
-     hatası kolay oluyor; dosya yoksa panelde sessiz bir boşluk yerine
-     açık bir uyarı çıkar. Son isteğin sonucu geçerlidir. */
-  let videoProbe = 0;
-  function checkVideo(src) {
-    const el = $("#videoCheck");
-    if (!el) return;
-    const id = ++videoProbe;
-    if (!src) {
-      el.textContent = "";
-      el.className = "ad-video-check";
-      return;
-    }
-    el.textContent = "Dosya aranıyor…";
-    el.className = "ad-video-check";
-    const v = document.createElement("video");
-    v.preload = "metadata";
-    v.onloadedmetadata = () => {
-      if (id !== videoProbe) return;
-      el.textContent = `Dosya bulundu · ${Math.round(v.duration)} sn`;
-      el.className = "ad-video-check is-ok";
-    };
-    v.onerror = () => {
-      if (id !== videoProbe) return;
-      el.textContent = "Bu yolda video yok — dosyayı siteye yüklediniz mi?";
-      el.className = "ad-video-check is-bad";
-    };
-    v.src = src;
-  }
-
-  function selectMedia(i) {
-    const p = cur();
-    mediaIndex = p && p.media[i] ? i : -1;
-    renderMediaStrip();
-    renderMediaEdit();
-  }
-
-  /* Medya listesi değişti: taslağı kaydet ve her yeri tazele. */
-  function afterMediaChange() {
-    markDirty();
-    saveDraft();
-    renderMediaStrip();
-    renderPreview();
-    renderList();
-  }
-
-  /* Seçilen dosyaları varsayılan kırpmayla listeye ekler; sonuncusu
-     ince ayar için kırpıcıda açık kalır. */
-  async function addImages(files) {
-    const p = cur();
-    if (!p) return;
-    suppressCrop = true;
-    let added = 0;
-    for (const file of files) {
-      try {
-        await cropper.load(file);
-        const url = await cropper.toDataURL();
-        if (!url) continue;
-        p.media.push({ type: "image", src: url, poster: null });
-        added++;
-      } catch {
-        toast("Görsel açılamadı.");
-      }
-    }
-    if (!added) {
-      suppressCrop = false;
-      return;
-    }
-    selectMedia(p.media.length - 1); // bayrağı kendi penceresiyle devralır
-    afterMediaChange();
-  }
-
-  function addVideo() {
-    const p = cur();
-    if (!p) return;
-    const url = prompt(
-      "Video dosyasının yolu:\n\n" +
-        "Videoyu sitenizde assets/video/ klasörüne yükleyin, sonra\n" +
-        "dosya adını buraya yazın. Örnek:\n\n" +
-        "assets/video/tanitim.mp4",
-      "assets/video/.mp4"
-    );
-    if (!url || !url.trim()) return;
-    p.media.push({ type: "video", src: url.trim(), poster: null });
-    selectMedia(p.media.length - 1);
-    afterMediaChange();
-  }
-
-  function moveMedia(delta) {
-    const p = cur();
-    const j = mediaIndex + delta;
-    if (!p || !p.media[mediaIndex] || j < 0 || j >= p.media.length) return;
-    [p.media[mediaIndex], p.media[j]] = [p.media[j], p.media[mediaIndex]];
-    mediaIndex = j;
-    renderMediaStrip();
-    afterMediaChange();
-  }
-
-  function deleteMedia() {
-    const p = cur();
-    if (!p || !p.media[mediaIndex]) return;
-    p.media.splice(mediaIndex, 1);
-    selectMedia(Math.min(mediaIndex, p.media.length - 1));
-    afterMediaChange();
-  }
-
   function openProduct(id) {
     const p = products.find((x) => x.id === id);
     if (!p) return;
@@ -377,7 +185,10 @@
 
     renderBadgePicker(p.badges || []);
     renderCategoryList();
-    selectMedia(0);
+
+    pendingImage = p.image || null;
+    if (p.image) cropper.load(p.image);
+    else cropper.clear();
 
     renderList();
     renderPreview();
@@ -409,6 +220,7 @@
     p.stock = stock === "" ? 0 : Math.max(0, Math.floor(Number(stock) || 0));
 
     p.badges = $$("#badgePicker input:checked").map((i) => i.value);
+    p.image = pendingImage;
     return p;
   }
 
@@ -434,15 +246,18 @@
     const off = discountPct(p);
     const rows = [
       ["Boyut (yaklaşık)", p.size || DEFAULT_SPECS.size],
-      ["Hangi yönden destekler?", p.material || DEFAULT_SPECS.material],
-      ["Yaş aralığı", p.layer || DEFAULT_SPECS.layer],
+      ["Malzeme", p.material || DEFAULT_SPECS.material],
+      ["Baskı kalitesi", p.layer || DEFAULT_SPECS.layer],
     ]
       .filter(([, v]) => v)
       .map(([k, v]) => `<div class="specs__row"><dt>${k}</dt><dd>${esc(v)}</dd></div>`)
       .join("");
 
     $("#previewDetail").innerHTML = `
-      ${galleryHTML(p, badges)}
+      <div class="gallery__main">
+        ${badges ? `<div class="gallery__badges">${badges}</div>` : ""}
+        ${productMedia(p)}
+      </div>
       <div class="ad-preview__info">
         <span class="detail__cat">${esc(p.category)}</span>
         <h1 class="detail__title">${esc(p.title) || "Ürün adı"}</h1>
@@ -504,21 +319,6 @@
     return JSON.stringify(v == null ? "" : String(v));
   }
 
-  /* Medya listesini okunabilir biçimde yazar. Görseller data URL olarak
-     gömülüdür, bu yüzden satırlar uzundur. */
-  function mediaLiteral(p) {
-    const list = p.media || [];
-    if (!list.length) return "[]";
-    return `[\n${list
-      .map(
-        (m) =>
-          `      { type: ${jsString(m.type)}, src: ${jsString(m.src)}${
-            m.poster ? `, poster: ${jsString(m.poster)}` : ""
-          } },`
-      )
-      .join("\n")}\n    ]`;
-  }
-
   function buildProductsFile() {
     const items = products
       .map(
@@ -527,7 +327,7 @@
     title: ${jsString(p.title)},
     category: ${jsString(p.category)},
     emoji: ${jsString(p.emoji || "📦")},
-    media: ${mediaLiteral(p)},
+    image: ${p.image ? jsString(p.image) : "null"},
     price: ${Number(p.price) || 0},
     oldPrice: ${p.oldPrice ? Number(p.oldPrice) : "null"},
     rating: ${Number(p.rating) || 0},
@@ -651,7 +451,6 @@ const CATEGORIES = ["Tümü", ...new Set(PRODUCTS.map((p) => p.category))];
       try {
         products = parseProductsFile(fr.result).map(normalize);
         currentId = null;
-        selectMedia(-1);
         $("#form").hidden = true;
         $("#preview").hidden = true;
         $("#editorEmpty").hidden = false;
@@ -673,8 +472,7 @@ const CATEGORIES = ["Tümü", ...new Set(PRODUCTS.map((p) => p.category))];
       title: p.title || "",
       category: p.category || "Diğer",
       emoji: p.emoji || "📦",
-      // Eski kayıtlardaki tek `image` alanı da listeye çevrilir
-      media: mediaList(p),
+      image: p.image || null,
       price: Number(p.price) || 0,
       oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
       rating: typeof p.rating === "number" ? p.rating : 5,
@@ -743,7 +541,6 @@ const CATEGORIES = ["Tümü", ...new Set(PRODUCTS.map((p) => p.category))];
       if (!confirm(`"${p.title}" silinsin mi? Bu işlem geri alınamaz.`)) return;
       products = products.filter((x) => x.id !== currentId);
       currentId = null;
-      selectMedia(-1);
       $("#form").hidden = true;
       $("#preview").hidden = true;
       $("#editorEmpty").hidden = false;
@@ -758,63 +555,49 @@ const CATEGORIES = ["Tümü", ...new Set(PRODUCTS.map((p) => p.category))];
     $("#form").addEventListener("change", onFormChange);
     $("#form").addEventListener("submit", (e) => e.preventDefault());
 
-    // Medya listesi
-    $("#mediaStrip").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-media]");
-      if (btn) selectMedia(Number(btn.dataset.media));
-    });
-
+    // Görsel
     $("#imageInput").addEventListener("change", async (e) => {
-      const files = [...e.target.files];
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        await cropper.load(file);
+      } catch {
+        toast("Görsel açılamadı.");
+      }
       e.target.value = "";
-      if (files.length) await addImages(files);
     });
 
-    $("#videoAdd").addEventListener("click", addVideo);
-    $("#mediaUp").addEventListener("click", () => moveMedia(-1));
-    $("#mediaDown").addEventListener("click", () => moveMedia(1));
-    $("#mediaDelete").addEventListener("click", () => {
-      const m = curMedia();
-      if (!m) return;
-      const what = m.type === "video" ? "Video" : "Görsel";
-      if (confirm(`${what} bu üründen silinsin mi?`)) deleteMedia();
+    $("#imageClear").addEventListener("click", () => {
+      cropper.clear();
+      pendingImage = null;
+      onFormChange();
     });
 
-    let videoTypeTimer;
-    $("#f_videoUrl").addEventListener("input", () => {
-      const m = curMedia();
-      if (!m || m.type !== "video") return;
-      m.src = $("#f_videoUrl").value.trim();
-      afterMediaChange();
-      // Her tuşta dosya aramak yerine yazmayı bitirmesini bekle
-      clearTimeout(videoTypeTimer);
-      videoTypeTimer = setTimeout(() => checkVideo(m.src), 450);
-    });
-
-    /* Sürükle bırak — hem listenin hem kırpıcının üstüne bırakılabilir.
-       (Liste boşken kırpıcı gizli olur, o yüzden ikisi de hedeftir.) */
-    function wireDrop(el) {
-      ["dragenter", "dragover"].forEach((ev) =>
-        el.addEventListener(ev, (e) => {
-          e.preventDefault();
-          el.classList.add("is-drop");
-        })
+    // Sürükle bırak
+    const drop = $("#cropper");
+    ["dragenter", "dragover"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => {
+        e.preventDefault();
+        drop.classList.add("is-drop");
+      })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => {
+        e.preventDefault();
+        drop.classList.remove("is-drop");
+      })
+    );
+    drop.addEventListener("drop", async (e) => {
+      const file = [...(e.dataTransfer?.files || [])].find((f) =>
+        f.type.startsWith("image/")
       );
-      ["dragleave", "drop"].forEach((ev) =>
-        el.addEventListener(ev, (e) => {
-          e.preventDefault();
-          el.classList.remove("is-drop");
-        })
-      );
-      el.addEventListener("drop", async (e) => {
-        const files = [...(e.dataTransfer?.files || [])].filter((f) =>
-          f.type.startsWith("image/")
-        );
-        if (files.length) await addImages(files);
-      });
-    }
-    wireDrop($("#cropper"));
-    wireDrop($("#mediaStrip"));
+      if (!file) return;
+      try {
+        await cropper.load(file);
+      } catch {
+        toast("Görsel açılamadı.");
+      }
+    });
 
     // Dışa / içe aktarma
     $("#exportBtn").addEventListener("click", exportFile);
@@ -836,22 +619,19 @@ const CATEGORIES = ["Tümü", ...new Set(PRODUCTS.map((p) => p.category))];
   /* ---------------- Başlangıç ---------------- */
   async function init() {
     cropper = Cropper.create($("#cropper"), { aspect: 4 / 5 });
-
-    /* Kırpıcıdaki her oynama seçili medyaya işlenir: görselde görselin
-       kendisi, videoda kapak görseli güncellenir. */
     cropper.onChange((url) => {
-      if (suppressCrop) return;
-      const m = curMedia();
-      if (!m) return;
-      if (m.type === "video") m.poster = url;
-      else if (url) m.src = url;
-      else return; // görselde boş bildirim: silme ayrı düğmeyle yapılır
-      afterMediaChange();
+      pendingImage = url;
+      if (currentId) {
+        const p = products.find((x) => x.id === currentId);
+        if (p) {
+          p.image = url;
+          markDirty();
+          saveDraft();
+          renderPreview();
+          renderList();
+        }
+      }
     });
-
-    // Önizlemedeki galeriler mağazanınkiyle aynı kodu kullanır
-    wireSlides($("#previewCard"));
-    wireSlides($("#previewDetail"));
 
     wire();
     $("#listCount").textContent = "Sitedeki ürünler okunuyor…";

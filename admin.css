@@ -145,10 +145,6 @@ textarea.ad-input { resize: vertical; line-height: 1.6; }
 }
 .ad-hint { font-size: .78rem; color: var(--muted); line-height: 1.6; margin: 6px 0 14px; }
 
-/* `hidden` özniteliği sınıf kurallarının display'ini yenemez
-   (tarayıcı varsayılanı daha düşük önceliklidir) — burada bağlanır. */
-[hidden] { display: none !important; }
-
 .ad-row { display: block; margin-bottom: 14px; }
 .ad-row > span {
   display: block; font-size: .76rem; font-weight: 600; color: var(--ink-2); margin-bottom: 6px;
@@ -204,52 +200,6 @@ textarea.ad-input { resize: vertical; line-height: 1.6; }
 .ad-imgbar { display: flex; gap: 8px; margin: 12px 0 18px; flex-wrap: wrap; }
 .ad-imgbar .btn-ghost { cursor: pointer; }
 
-/* ---------- Medya listesi (görseller + videolar) ---------- */
-.ad-media {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  padding: 12px; margin-bottom: 4px;
-  border: 1px dashed var(--line); border-radius: var(--radius);
-  background: var(--bg);
-  transition: border-color .2s, background .2s;
-}
-.ad-media.is-drop { border-color: var(--accent); background: var(--cream); }
-.ad-media__empty { font-size: .78rem; color: var(--muted); margin: 0; padding: 8px 2px; }
-
-.ad-media__item {
-  position: relative; width: 64px; aspect-ratio: 4/5;
-  border: 1px solid var(--line); border-radius: var(--radius);
-  background: var(--panel); overflow: hidden; cursor: pointer;
-  display: grid; place-items: center; font-size: 1.5rem;
-  transition: border-color .2s, box-shadow .2s, transform .2s;
-}
-.ad-media__item:hover { transform: translateY(-2px); }
-.ad-media__item.is-active { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
-.ad-media__thumb { position: absolute; inset: 0; display: block; }
-.ad-media__thumb .figure { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ad-media__thumb .emo { width: 1.4rem; height: 1.4rem; }
-.ad-media__thumb .media-play { width: 22px; height: 22px; }
-.ad-media__thumb .media-play::after { border-width: 5px 0 5px 8px; }
-/* Sıra numarası / kapak işareti */
-.ad-media__tag {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  padding: 2px 0; text-align: center;
-  font-size: .56rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  color: #fff; background: rgba(42, 38, 32, .62);
-}
-/* Video ana sayfadaki karta çıkmaz — listede ayrı dursun diye farklı rozet */
-.ad-media__item--video .ad-media__tag { background: rgba(148, 94, 59, .82); }
-
-.ad-media-edit {
-  padding: 14px; margin: 10px 0 16px;
-  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
-}
-.ad-media-edit .ad-hint { margin-top: 0; }
-/* Video dosyası bulundu / bulunamadı bildirimi */
-.ad-video-check { font-size: .74rem; margin-top: 6px; color: var(--muted); min-height: 1.1em; }
-.ad-video-check.is-ok  { color: #5d7a4a; }
-.ad-video-check.is-bad { color: #c0432f; }
-.ad-media-edit .ad-imgbar { margin-bottom: 0; }
-
 /* ---------- Önizleme ---------- */
 .ad-preview {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg);
@@ -267,10 +217,6 @@ textarea.ad-input { resize: vertical; line-height: 1.6; }
 .ad-preview__grid { grid-template-columns: 1fr; max-width: 210px; }
 /* Önizlemede kart etkileşimsizdir ve reveal animasyonunu beklemez */
 .ad-preview__grid { pointer-events: none; }
-/* Önizlemedeki kart tıklanamaz ama galerisi gezilebilir olmalı:
-   çerçeve açılır (okların görünmesi hover'a bağlı), bağlantı kapalı kalır. */
-.ad-preview__grid .card__frame { pointer-events: auto; }
-.ad-preview__grid .card__link { pointer-events: none; }
 .ad-preview__grid .card.reveal { opacity: 1; transform: none; }
 /* Sıra (:nth-child) tonunu doğru tutmak için eklenen görünmez kardeşler */
 .ad-preview__ghost { display: none; }
@@ -283,12 +229,6 @@ textarea.ad-input { resize: vertical; line-height: 1.6; }
   border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 14px; background: var(--bg);
 }
 .ad-preview__detail .gallery__main { font-size: 3.6rem; max-width: 190px; margin: 0 auto; }
-.ad-preview__detail .gallery__thumbs { justify-content: center; gap: 6px; margin-top: 10px; }
-.ad-preview__detail .gallery__thumb { width: 42px; }
-.ad-preview__detail .gallery__nav { width: 30px; height: 30px; font-size: 1.1rem; }
-.ad-preview__detail .gallery__nav--prev { left: 6px; }
-.ad-preview__detail .gallery__nav--next { right: 6px; }
-.ad-preview__detail .gallery__counter { right: 6px; bottom: 6px; font-size: .6rem; padding: .15rem .5rem; }
 .ad-preview__detail .gallery__badges { top: 10px; left: 10px; gap: 5px; }
 .ad-preview__detail .gallery__badges .badge { font-size: .55rem; padding: .2rem .5rem; }
 .ad-preview__info { margin-top: 16px; }
